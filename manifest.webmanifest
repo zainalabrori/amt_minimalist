@@ -1,0 +1,26 @@
+{
+  "name": "AMT Production",
+  "short_name": "AMT",
+  "description": "Pencatatan produksi dan gaji AMT Production.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f7f5",
+  "theme_color": "#2563eb",
+  "lang": "id",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "images/amt-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/amt.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

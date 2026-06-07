@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light" data-comfort="false">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AMT Production">
+  <title>AMT PRODUCTION</title>
+  <link rel="icon" href="images/amt.png" type="image/png">
+  <link rel="apple-touch-icon" href="images/amt.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.32/sweetalert2.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="nav">
+  <a class="nav-brand" href="index.html">
+    <img src="images/amt.png" alt="AMT">
+    AMT PRODUCTION
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><button class="nav-link tab-link active" data-tab="calendar">Kalender</button></li>
+    <li><button class="nav-link tab-link" data-tab="people">Anggota</button></li>
+    <li><button class="nav-link tab-link" data-tab="money">Hitung Uang</button></li>
+    <li><button class="nav-link tab-link" data-tab="settings">Data</button></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-btn" id="comfortToggle" onclick="toggleComfort()" title="Comfort Eye Mode"><i class="fas fa-eye"></i></button>
+    <button class="theme-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle tema"><i class="fas fa-moon"></i></button>
+    <button class="nav-toggle" id="navToggle"><i class="fas fa-bars"></i></button>
+  </div>
+</nav>
+
+<!-- ── Main Content ── -->
+<main class="main">
+
+  <!-- ── Tab: Calendar ── -->
+  <div id="tab-calendar" class="tab-content">
+    <!-- Calendar card -->
+    <div class="card mb-3">
+      <div class="card-header">
+        <h2 style="font-size:.95rem;font-weight:600;display:flex;align-items:center;gap:.5rem;">
+          <i class="fas fa-calendar-alt" style="color:var(--accent)"></i>
+          <span id="calTitle">Januari 2025</span>
+        </h2>
+        <div class="flex gap-1">
+          <button class="btn btn-ghost btn-sm" onclick="prevMonth()"><i class="fas fa-chevron-left"></i></button>
+          <button class="btn btn-ghost btn-sm" onclick="goToday()">Hari ini</button>
+          <button class="btn btn-ghost btn-sm" onclick="nextMonth()"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="cal-grid" id="calGrid">
+          <!-- headers injected by JS -->
+        </div>
+        <div class="cal-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div> Hari ini</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Ada produksi</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div> Libur Jumat</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> Libur lainnya</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results card -->
+    <div class="card" id="resultsCard" style="display:none">
+      <div class="results-header">
+        <div class="results-title">
+          <span>Ringkasan</span>
+          <span id="resultsMonthLabel" class="results-month"></span>
+        </div>
+        <div class="results-meta">
+          <span class="badge badge-green" id="badgeTotal">Total: Rp0</span>
+          <span class="badge badge-blue"  id="badgeDays">Hari: 0</span>
+          <button class="btn btn-ghost btn-sm" id="sortBtn" onclick="toggleSort()" title="Urut">
+            <i class="fas fa-sort-amount-down"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body" id="resultsList"></div>
+    </div>
+  </div>
+
+  <!-- ── Tab: People ── -->
+  <div id="tab-people" class="tab-content" style="display:none">
+    <div class="page-header">
+      <h1>Daftar Anggota</h1>
+      <p>Tambah atau hapus nama pekerja.</p>
+    </div>
+    
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="form-group mb-0">
+          <label class="form-label">Nama Anggota Baru</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="peopleInputName" placeholder="Masukkan nama anggota baru...">
+            <button class="btn btn-primary" onclick="handleAddPersonTab()"><i class="fas fa-plus"></i> Tambah</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="fas fa-list"></i> Daftar Anggota Aktif</span>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table class="table" id="peopleTable">
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th style="width:100px;text-align:right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="peopleTableBody">
+            <!-- Injected by JS -->
+          </tbody>
+        </table>
+        <div id="peopleEmptyState" class="empty-state" style="display:none">
+          <i class="fas fa-user-slash"></i>
+          <p>Belum ada anggota yang terdaftar. Tambahkan di atas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Money Check ── -->
+  <div id="tab-money" class="tab-content" style="display:none">
+    <div class="page-header">
+      <h1>Hitung Selisih Uang</h1>
+      <p>Bandingkan uang yang dipegang dengan total gaji.</p>
+    </div>
+
+    <div class="cm-hero">
+      <!-- Injected dynamically by JS -->
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Jumlah Uang yang Dipegang</label>
+          <div class="input-group">
+            <span class="input-group-text">Rp</span>
+            <input type="text" inputmode="numeric" class="form-control" id="cmInput"
+                   placeholder="Contoh: 100.000" autocomplete="off" style="font-size:1.2rem;font-weight:600">
+          </div>
+          <p style="font-size:.78rem;color:var(--text-3);margin-top:.35rem">Contoh penulisan: 100.000</p>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="checkMoney()">
+          <i class="fas fa-check-circle"></i> Hitung Selisih
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Settings ── -->
+  <div id="tab-settings" class="tab-content" style="display:none">
+    <div class="page-header">
+      <h1>Data & Cadangan</h1>
+      <p>Simpan, pulihkan, dan bersihkan data.</p>
+    </div>
+
+    <div class="cards-grid">
+      <!-- Export -->
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-file-export"></i> Simpan Cadangan</span></div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--text-2);margin-bottom:.75rem">Simpan semua data produksi dan anggota sebagai file JSON.</p>
+          <div class="alert alert-info mb-2"><i class="fas fa-info-circle"></i> Sangat disarankan untuk mengekspor data secara berkala.</div>
+          <button class="btn btn-success btn-block" onclick="exportData()"><i class="fas fa-download"></i> Unduh File Cadangan</button>
+        </div>
+      </div>
+
+      <!-- Import -->
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-file-import"></i> Pulihkan Cadangan</span></div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--text-2);margin-bottom:.75rem">Pulihkan data lokal dari file JSON backup sebelumnya.</p>
+          <div class="alert alert-warn mb-2"><i class="fas fa-exclamation-triangle"></i> Anda dapat memilih untuk menimpa atau menambah data.</div>
+          <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImport()">
+          <button class="btn btn-ghost btn-block" onclick="document.getElementById('importFile').click()">
+            <i class="fas fa-upload"></i> Pilih File Cadangan
+          </button>
+        </div>
+      </div>
+
+      <!-- WhatsApp Text -->
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="fab fa-whatsapp" style="color:var(--success)"></i> WA — Laporan Teks</span></div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--text-2);margin-bottom:.75rem">Kirim rincian laporan produksi bulan ini sebagai format teks ke WhatsApp.</p>
+          <button class="btn btn-success btn-block" onclick="shareWAText()"><i class="fab fa-whatsapp"></i> Bagikan Teks WhatsApp</button>
+        </div>
+      </div>
+
+      <!-- WhatsApp Image -->
+      <div class="card">
+        <div class="card-header"><span class="card-title"><i class="fas fa-camera" style="color:var(--info)"></i> WA — Laporan Gambar</span></div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--text-2);margin-bottom:.75rem">Unduh laporan produksi berbentuk tangkapan gambar untuk dibagikan.</p>
+          <button class="btn btn-ghost btn-block" onclick="shareWAImage()"><i class="fas fa-camera"></i> Unduh Gambar Laporan</button>
+        </div>
+      </div>
+
+      <!-- Auto Delete -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-magic"></i> Hapus Data Lama Otomatis</span>
+          <span class="badge" id="autoDeleteBadge" style="background:var(--bg-input);color:var(--text-2)">Tidak Aktif</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--text-2);margin-bottom:.75rem">
+            Data produksi bulan lalu akan terhapus otomatis setiap tanggal 2. Data bulan berjalan aman.
+          </p>
+          <button class="btn btn-primary btn-block" id="autoDeleteBtn" onclick="toggleAutoDelete()">
+            <i class="fas fa-magic"></i> <span id="autoDeleteBtnText">Aktifkan Hapus Otomatis</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Manual Delete -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-trash-alt"></i> Hapus Semua Data</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--text-2);margin-bottom:.75rem">
+            Kosongkan seluruh data produksi dan liburan secara permanen.
+          </p>
+          <div class="alert alert-danger mb-2">
+            <i class="fas fa-exclamation-triangle"></i> Tindakan ini menghapus database lokal dan tidak dapat diurungkan!
+          </div>
+          <button class="btn btn-danger btn-block" onclick="manualDeleteAll()">
+            <i class="fas fa-trash-alt"></i> Hapus Semua Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Storage Info -->
+      <div class="card" style="grid-column: 1 / -1">
+        <div class="card-header">
+          <span class="card-title"><i class="fas fa-hdd"></i> Ringkasan Penyimpanan</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadStorage()"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div class="card-body" id="storageInfo">
+          <!-- Injected dynamically by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Production Modal ── -->
+<div class="modal-backdrop" id="modalProd">
+  <div class="modal-box modal-lg">
+    <div class="modal-head">
+      <h5><span id="modalProdTitle">Tambah Produksi</span></h5>
+      <button class="modal-close" onclick="closeModal('modalProd')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info mb-2">
+        <i class="fas fa-calendar"></i>
+        <span id="modalProdDate"></span>
+      </div>
+
+      <!-- Anggota -->
+      <div class="form-group">
+        <div class="flex-between mb-1">
+          <label class="form-label mb-0">Pilih Pekerja</label>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAddPerson()"><i class="fas fa-user-plus"></i> Tambah Nama Cepat</button>
+        </div>
+        <div id="addPersonRow" style="display:none" class="input-group mb-1">
+          <input type="text" class="form-control" id="newPersonName" placeholder="Nama pekerja baru">
+          <button class="btn btn-primary btn-sm" onclick="doAddPerson()"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="dropdown">
+          <button class="dropdown-label" type="button" onclick="toggleDropdown('peopleDropdown')" id="dropPeopleLbl">
+            <span id="dropPeopleText" style="color:var(--text-3)">Pilih pekerja</span>
+            <i class="fas fa-chevron-down" style="font-size:.75rem"></i>
+          </button>
+          <div class="dropdown-panel" id="peopleDropdown">
+            <div class="dropdown-section-label">Anggota Pekerja</div>
+            <div id="peopleList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <!-- Jumlah -->
+        <div class="form-group">
+          <label class="form-label">Jumlah Produksi (Qty)</label>
+          <input type="number" class="form-control" id="fQty" placeholder="0" min="1">
+        </div>
+        <!-- Kategori & Tipe -->
+        <div class="form-group">
+          <label class="form-label">Kategori Produk</label>
+          <div class="btn-group mb-1">
+            <input type="radio" class="btn-check" name="catRadio" id="catGelas" value="Gelas" onchange="onCatChange()">
+            <label class="btn btn-ghost" for="catGelas">Gelas</label>
+            <input type="radio" class="btn-check" name="catRadio" id="catBotol" value="Botol" onchange="onCatChange()">
+            <label class="btn btn-ghost" for="catBotol">Botol</label>
+          </div>
+          <div id="gelasOpts" style="display:none" class="btn-group">
+            <input type="radio" class="btn-check" name="typeRadio" id="t320" value="320"><label class="btn btn-ghost btn-sm" for="t320">320</label>
+            <input type="radio" class="btn-check" name="typeRadio" id="t350" value="350"><label class="btn btn-ghost btn-sm" for="t350">350</label>
+          </div>
+          <div id="botolOpts" style="display:none" class="btn-group">
+            <input type="radio" class="btn-check" name="typeRadio" id="t720" value="720"><label class="btn btn-ghost btn-sm" for="t720">720</label>
+            <input type="radio" class="btn-check" name="typeRadio" id="t750" value="750"><label class="btn btn-ghost btn-sm" for="t750">750</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catatan -->
+      <div class="form-group">
+        <label class="form-label">Catatan Tambahan</label>
+        <textarea class="form-control" id="fNote" rows="2" placeholder="Opsional..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalProd')">Batal</button>
+      <button class="btn btn-primary" onclick="saveProduction()"><i class="fas fa-save"></i> Simpan Laporan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Holiday Modal ── -->
+<div class="modal-backdrop" id="modalHoliday">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h5>Tandai Hari Libur</h5>
+      <button class="modal-close" onclick="closeModal('modalHoliday')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger mb-2"><i class="fas fa-calendar"></i> <span id="modalHolidayDate"></span></div>
+      <div class="form-group">
+        <label class="form-label">Nama Libur / Deskripsi</label>
+        <input type="text" class="form-control" id="fHolidayName" placeholder="Contoh: Libur Nasional, Acara Keluarga">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catatan Tambahan</label>
+        <textarea class="form-control" id="fHolidayNote" rows="2" placeholder="Opsional..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalHoliday')">Batal</button>
+      <button class="btn btn-danger" onclick="saveHoliday()"><i class="fas fa-save"></i> Simpan Hari Libur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Day Details Modal ── -->
+<div class="modal-backdrop" id="modalDay">
+  <div class="modal-box modal-lg">
+    <div class="modal-head">
+      <h5>Detail Tanggal: <span id="modalDayTitle"></span></h5>
+      <button class="modal-close" onclick="closeModal('modalDay')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalDayContent"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalDay')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<footer style="text-align:center;padding:1.5rem;font-size:.78rem;color:var(--text-3)">
+  &copy; 2025 AMT Production
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.32/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js');
+    });
+  }
+</script>
+</body>
+</html>
