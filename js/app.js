@@ -63,6 +63,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.target.value = val ? new Intl.NumberFormat('id-ID').format(val) : '';
   });
 
+  // Custom Price: numeric format on input
+  document.getElementById('fCustomPrice')?.addEventListener('input', e => {
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    e.target.value = val ? new Intl.NumberFormat('id-ID').format(val) : '';
+  });
+
   // Anggota tab: Enter to add
   document.getElementById('peopleInputName')?.addEventListener('keypress', e => {
     if (e.key === 'Enter') handleAddPersonTab();
@@ -389,6 +395,8 @@ async function openProdModal(date, existingResult = null) {
   document.querySelectorAll('input[name="catRadio"], input[name="typeRadio"]').forEach(r => r.checked = false);
   document.getElementById('gelasOpts').style.display = 'none';
   document.getElementById('botolOpts').style.display = 'none';
+  document.getElementById('customPriceOpts').style.display = 'none';
+  document.getElementById('fCustomPrice').value = '';
   document.getElementById('addPersonRow').style.display = 'none';
   document.getElementById('newPersonName').value = '';
   _selectedPeople = [];
@@ -409,6 +417,13 @@ async function openProdModal(date, existingResult = null) {
       document.getElementById('botolOpts').style.display = 'flex';
       if (existingResult.product.includes('720')) document.getElementById('t720').checked = true;
       if (existingResult.product.includes('750')) document.getElementById('t750').checked = true;
+    } else if (existingResult.product.includes('Kustom')) {
+      document.getElementById('catKustom').checked = true;
+      document.getElementById('customPriceOpts').style.display = 'block';
+      const match = existingResult.product.match(/\((\d+)\)/);
+      if (match) {
+        document.getElementById('fCustomPrice').value = match[1];
+      }
     }
     _selectedPeople = existingResult.peopleNames.split(', ').filter(n => _people.includes(n));
     await refreshPeopleList(); // re-render checkboxes with selections
@@ -419,32 +434,51 @@ async function openProdModal(date, existingResult = null) {
 
 function onCatChange() {
   const isGelas = document.getElementById('catGelas').checked;
+  const isBotol = document.getElementById('catBotol').checked;
+  const isKustom = document.getElementById('catKustom').checked;
+
   document.getElementById('gelasOpts').style.display = isGelas ? 'flex' : 'none';
-  document.getElementById('botolOpts').style.display = isGelas ? 'none' : 'flex';
+  document.getElementById('botolOpts').style.display = isBotol ? 'flex' : 'none';
+  document.getElementById('customPriceOpts').style.display = isKustom ? 'block' : 'none';
+
+  // Clear sub-selections
   document.querySelectorAll('input[name="typeRadio"]').forEach(r => r.checked = false);
+  document.getElementById('fCustomPrice').value = '';
 }
 
 async function saveProduction() {
   const date   = document.getElementById('modalProd').dataset.date;
-  const qty    = parseInt(document.getElementById('fQty').value);
+  const qty    = parseInt(document.getElementById('fQty').value, 10);
   const note   = document.getElementById('fNote').value.trim();
   const catEl  = document.querySelector('input[name="catRadio"]:checked');
-  const typeEl = document.querySelector('input[name="typeRadio"]:checked');
+  
+  let typeVal = 0;
+  let typeLabel = '';
 
-  if (!qty || qty <= 0 || !catEl || !typeEl || _selectedPeople.length === 0) {
+  if (catEl && catEl.value === 'Kustom') {
+    typeVal = parseInt(document.getElementById('fCustomPrice').value, 10);
+    typeLabel = typeVal ? typeVal.toString() : '';
+  } else {
+    const typeEl = document.querySelector('input[name="typeRadio"]:checked');
+    if (typeEl) {
+      typeVal = parseInt(typeEl.value, 10);
+      typeLabel = typeEl.value;
+    }
+  }
+
+  if (!qty || qty <= 0 || !catEl || !typeVal || _selectedPeople.length === 0) {
     Swal.fire({
       icon: 'warning',
       title: 'Data belum lengkap',
-      text: 'Isi jumlah, pilih produk, lalu pilih minimal 1 pekerja.',
+      text: 'Isi jumlah, pilih produk/harga kustom yang valid, lalu pilih minimal 1 pekerja.',
       timer: 2500,
       showConfirmButton: false
     });
     return;
   }
 
-  const typeVal = parseInt(typeEl.value);
   const total   = Math.round((qty * typeVal) / _selectedPeople.length);
-  const product = `${catEl.value} (${typeEl.value})`;
+  const product = `${catEl.value} (${typeLabel})`;
 
   const data = {
     date:        formatDateLocal(date),

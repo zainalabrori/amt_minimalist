@@ -316,6 +316,11 @@ button.nav-link {
 
 /* ── Form elements ── */
 .form-group { margin-bottom: 1rem; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
 .form-label {
   display: block;
   font-size: .85rem;
@@ -851,6 +856,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   .cal-legend { gap: .5rem .75rem; font-size: .72rem; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .cards-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; gap: .5rem; }
   .nav-links {
     display: none;
     position: fixed; top: var(--nav-h); left: 0; right: 0;
@@ -891,5 +897,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .w-full { width: 100%; }
 .font-mono { font-family: var(--font-mono); }
 .hidden { display: none; }
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-down {
+  animation: slide-down 0.18s ease-out forwards;
+}
 
 

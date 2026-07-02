@@ -291,7 +291,7 @@
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+      <div class="form-grid">
         <!-- Jumlah -->
         <div class="form-group">
           <label class="form-label">Jumlah Produksi (Qty)</label>
@@ -305,14 +305,22 @@
             <label class="btn btn-ghost" for="catGelas">Gelas</label>
             <input type="radio" class="btn-check" name="catRadio" id="catBotol" value="Botol" onchange="onCatChange()">
             <label class="btn btn-ghost" for="catBotol">Botol</label>
+            <input type="radio" class="btn-check" name="catRadio" id="catKustom" value="Kustom" onchange="onCatChange()">
+            <label class="btn btn-ghost" for="catKustom">Kustom</label>
           </div>
-          <div id="gelasOpts" style="display:none" class="btn-group">
+          <div id="gelasOpts" style="display:none" class="btn-group animate-slide-down">
             <input type="radio" class="btn-check" name="typeRadio" id="t320" value="320"><label class="btn btn-ghost btn-sm" for="t320">320</label>
             <input type="radio" class="btn-check" name="typeRadio" id="t350" value="350"><label class="btn btn-ghost btn-sm" for="t350">350</label>
           </div>
-          <div id="botolOpts" style="display:none" class="btn-group">
+          <div id="botolOpts" style="display:none" class="btn-group animate-slide-down">
             <input type="radio" class="btn-check" name="typeRadio" id="t720" value="720"><label class="btn btn-ghost btn-sm" for="t720">720</label>
             <input type="radio" class="btn-check" name="typeRadio" id="t750" value="750"><label class="btn btn-ghost btn-sm" for="t750">750</label>
+          </div>
+          <div id="customPriceOpts" style="display:none" class="mt-1 animate-slide-down">
+            <div class="input-group">
+              <span class="input-group-text" style="font-size: .85rem; padding: .45rem .65rem;">Rp</span>
+              <input type="text" inputmode="numeric" class="form-control" id="fCustomPrice" placeholder="Harga unit..." autocomplete="off" style="font-size: .85rem; padding: .45rem .65rem;">
+            </div>
           </div>
         </div>
       </div>
