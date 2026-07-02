@@ -17,6 +17,15 @@ db.version(1).stores({
   settings: 'key',
 });
 
+db.version(2).stores({
+  results:  '++id, dateOriginal, product, peopleNames',
+  people:   '++id, name',
+  holidays: '++id, date',
+  users:    '++id, name',
+  settings: 'key',
+  products: '++id, name, price',
+});
+
 // ── Helpers ────────────────────────────────
 
 /** Ambil satu setting by key, return defaultVal jika tidak ada */
@@ -185,6 +194,35 @@ function generateId() {
 
 function getInitials(name) {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+// ── Products (Dynamic Catalog) ─────────────
+
+async function getProducts() {
+  return db.products.toArray();
+}
+
+async function addProduct(name, price) {
+  const exists = await db.products.where({ name, price: Number(price) }).count();
+  if (exists) return false;
+  await db.products.add({ name, price: Number(price) });
+  return true;
+}
+
+async function deleteProduct(id) {
+  return db.products.delete(id);
+}
+
+async function seedDefaultProducts() {
+  const count = await db.products.count();
+  if (count === 0) {
+    await db.products.bulkAdd([
+      { name: 'Gelas', price: 320 },
+      { name: 'Gelas', price: 350 },
+      { name: 'Botol', price: 720 },
+      { name: 'Botol', price: 750 }
+    ]);
+  }
 }
 
 // ── Theme ──────────────────────────────────

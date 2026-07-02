@@ -25,7 +25,7 @@
   </a>
   <ul class="nav-links" id="navLinks">
     <li><button class="nav-link tab-link active" data-tab="calendar">Kalender</button></li>
-    <li><button class="nav-link tab-link" data-tab="people">Anggota</button></li>
+    <li><button class="nav-link tab-link" data-tab="people">Anggota & Produk</button></li>
     <li><button class="nav-link tab-link" data-tab="money">Hitung Uang</button></li>
     <li><button class="nav-link tab-link" data-tab="settings">Data</button></li>
   </ul>
@@ -89,41 +89,88 @@
   <!-- ── Tab: People ── -->
   <div id="tab-people" class="tab-content" style="display:none">
     <div class="page-header">
-      <h1>Daftar Anggota</h1>
-      <p>Tambah atau hapus nama pekerja.</p>
+      <h1>Anggota & Produk</h1>
+      <p>Kelola daftar pekerja, nama produk, serta tarif upah.</p>
     </div>
-    
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="form-group mb-0">
-          <label class="form-label">Nama Anggota Baru</label>
-          <div class="input-group">
-            <input type="text" class="form-control" id="peopleInputName" placeholder="Masukkan nama anggota baru...">
-            <button class="btn btn-primary" onclick="handleAddPersonTab()"><i class="fas fa-plus"></i> Tambah</button>
+
+    <div class="cards-grid">
+      <!-- Kolom Kiri: Anggota -->
+      <div>
+        <div class="card mb-2">
+          <div class="card-body">
+            <div class="form-group mb-0">
+              <label class="form-label">Nama Anggota Baru</label>
+              <div class="input-group">
+                <input type="text" class="form-control" id="peopleInputName" placeholder="Nama anggota baru...">
+                <button class="btn btn-primary" onclick="handleAddPersonTab()"><i class="fas fa-plus"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-users"></i> Anggota Aktif</span>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table class="table" id="peopleTable">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th style="width:90px;text-align:right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="peopleTableBody">
+                <!-- Injected by JS -->
+              </tbody>
+            </table>
+            <div id="peopleEmptyState" class="empty-state" style="display:none">
+              <i class="fas fa-user-slash"></i>
+              <p>Belum ada anggota.</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title"><i class="fas fa-list"></i> Daftar Anggota Aktif</span>
-      </div>
-      <div class="card-body" style="padding:0">
-        <table class="table" id="peopleTable">
-          <thead>
-            <tr>
-              <th>Nama</th>
-              <th style="width:100px;text-align:right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="peopleTableBody">
-            <!-- Injected by JS -->
-          </tbody>
-        </table>
-        <div id="peopleEmptyState" class="empty-state" style="display:none">
-          <i class="fas fa-user-slash"></i>
-          <p>Belum ada anggota yang terdaftar. Tambahkan di atas.</p>
+      <!-- Kolom Kanan: Produk & Harga -->
+      <div>
+        <div class="card mb-2">
+          <div class="card-body">
+            <div class="form-group mb-1">
+              <label class="form-label">Nama/Kategori Produk</label>
+              <input type="text" class="form-control" id="productInputName" list="existingProductNames" placeholder="Contoh: Gelas, Botol Mini...">
+              <datalist id="existingProductNames"></datalist>
+            </div>
+            <div class="form-group mb-2">
+              <label class="form-label">Tarif Upah per Unit (Rp)</label>
+              <input type="text" inputmode="numeric" class="form-control" id="productInputPrice" placeholder="Contoh: 320">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="handleAddProductTab()"><i class="fas fa-plus"></i> Tambah Produk & Tarif</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><i class="fas fa-tags"></i> Daftar Produk & Tarif</span>
+          </div>
+          <div class="card-body" style="padding:0">
+            <table class="table" id="productsTable">
+              <thead>
+                <tr>
+                  <th>Produk</th>
+                  <th style="text-align:right">Tarif</th>
+                  <th style="width:90px;text-align:right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody">
+                <!-- Injected by JS -->
+              </tbody>
+            </table>
+            <div id="productsEmptyState" class="empty-state" style="display:none">
+              <i class="fas fa-tag"></i>
+              <p>Belum ada produk.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -300,27 +347,11 @@
         <!-- Kategori & Tipe -->
         <div class="form-group">
           <label class="form-label">Kategori Produk</label>
-          <div class="btn-group mb-1">
-            <input type="radio" class="btn-check" name="catRadio" id="catGelas" value="Gelas" onchange="onCatChange()">
-            <label class="btn btn-ghost" for="catGelas">Gelas</label>
-            <input type="radio" class="btn-check" name="catRadio" id="catBotol" value="Botol" onchange="onCatChange()">
-            <label class="btn btn-ghost" for="catBotol">Botol</label>
-            <input type="radio" class="btn-check" name="catRadio" id="catKustom" value="Kustom" onchange="onCatChange()">
-            <label class="btn btn-ghost" for="catKustom">Kustom</label>
+          <div id="modalCatGroup" class="btn-group mb-1">
+            <!-- Dynamically generated category radio buttons -->
           </div>
-          <div id="gelasOpts" style="display:none" class="btn-group animate-slide-down">
-            <input type="radio" class="btn-check" name="typeRadio" id="t320" value="320"><label class="btn btn-ghost btn-sm" for="t320">320</label>
-            <input type="radio" class="btn-check" name="typeRadio" id="t350" value="350"><label class="btn btn-ghost btn-sm" for="t350">350</label>
-          </div>
-          <div id="botolOpts" style="display:none" class="btn-group animate-slide-down">
-            <input type="radio" class="btn-check" name="typeRadio" id="t720" value="720"><label class="btn btn-ghost btn-sm" for="t720">720</label>
-            <input type="radio" class="btn-check" name="typeRadio" id="t750" value="750"><label class="btn btn-ghost btn-sm" for="t750">750</label>
-          </div>
-          <div id="customPriceOpts" style="display:none" class="mt-1 animate-slide-down">
-            <div class="input-group">
-              <span class="input-group-text" style="font-size: .85rem; padding: .45rem .65rem;">Rp</span>
-              <input type="text" inputmode="numeric" class="form-control" id="fCustomPrice" placeholder="Harga unit..." autocomplete="off" style="font-size: .85rem; padding: .45rem .65rem;">
-            </div>
+          <div id="modalTypeContainer">
+            <!-- Dynamically generated type/price options go here -->
           </div>
         </div>
       </div>

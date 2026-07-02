@@ -1,4 +1,4 @@
-const CACHE_NAME = 'amt-production-v6';
+const CACHE_NAME = 'amt-production-v7';
 const APP_SHELL = [
   '/',
   '/index.html',

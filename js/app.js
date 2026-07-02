@@ -18,6 +18,7 @@ let sortDir  = 'desc';
 let _results  = [];
 let _holidays = [];
 let _people   = [];
+let _products = [];
 let _selectedPeople = [];
 let _editId   = null;
 
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupTabs();
 
   await migrateFromLocalStorage();
+  await seedDefaultProducts();
   await refreshCaches();
   // Pre-populate Friday holidays for current month then render
   await ensureFridayHolidays(calYear, calMonth);
@@ -73,12 +75,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('peopleInputName')?.addEventListener('keypress', e => {
     if (e.key === 'Enter') handleAddPersonTab();
   });
+
+  // Product Price: numeric format on input
+  document.getElementById('productInputPrice')?.addEventListener('input', e => {
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    e.target.value = val ? new Intl.NumberFormat('id-ID').format(val) : '';
+  });
+
+  // Product tab: Enter to add
+  document.getElementById('productInputPrice')?.addEventListener('keypress', e => {
+    if (e.key === 'Enter') handleAddProductTab();
+  });
 });
 
 async function refreshCaches() {
   _results  = await getResults();
   _holidays = await getHolidays();
   _people   = await getPeople();
+  _products = await getProducts();
 }
 
 // ── Friday holiday pre-population ──────────────────────────
@@ -383,6 +397,50 @@ async function showDayModal(date) {
 }
 
 // ── Production Modal ────────────────────────────────────────
+// ── Dynamic Modal Selectors ──────────────────────────────────
+function renderModalProductSelectors(selectedCategory = null, selectedPrice = null) {
+  const catGroup = document.getElementById('modalCatGroup');
+  const typeContainer = document.getElementById('modalTypeContainer');
+  if (!catGroup || !typeContainer) return;
+
+  // Group products by name
+  const grouped = {};
+  _products.forEach(p => {
+    (grouped[p.name] = grouped[p.name] || []).push(p.price);
+  });
+
+  const catNames = Object.keys(grouped).sort();
+
+  // Render Category Radios
+  let catHtml = '';
+  catNames.forEach(name => {
+    const checked = selectedCategory === name ? 'checked' : '';
+    catHtml += `
+      <input type="radio" class="btn-check" name="catRadio" id="cat_${CSS.escape(name)}" value="${name}" ${checked} onchange="onCatChange()">
+      <label class="btn btn-ghost" for="cat_${CSS.escape(name)}">${name}</label>
+    `;
+  });
+  catGroup.innerHTML = catHtml;
+
+  // Render Sub-selection price options
+  let typeHtml = '';
+  catNames.forEach(name => {
+    const prices = grouped[name].sort((a, b) => a - b);
+    const displayStyle = selectedCategory === name ? 'flex' : 'none';
+
+    typeHtml += `<div id="opts_${CSS.escape(name)}" style="display:${displayStyle}" class="btn-group animate-slide-down">`;
+    prices.forEach(price => {
+      const checked = (selectedCategory === name && Number(selectedPrice) === price) ? 'checked' : '';
+      typeHtml += `
+        <input type="radio" class="btn-check" name="typeRadio" id="price_${CSS.escape(name)}_${price}" value="${price}" ${checked}>
+        <label class="btn btn-ghost btn-sm" for="price_${CSS.escape(name)}_${price}">${price}</label>
+      `;
+    });
+    typeHtml += `</div>`;
+  });
+  typeContainer.innerHTML = typeHtml;
+}
+
 async function openProdModal(date, existingResult = null) {
   _editId = existingResult ? existingResult.id : null;
   document.getElementById('modalProdTitle').textContent = _editId ? 'Edit Produksi' : 'Tambah Produksi';
@@ -392,11 +450,6 @@ async function openProdModal(date, existingResult = null) {
   // Reset
   document.getElementById('fQty').value = '';
   document.getElementById('fNote').value = '';
-  document.querySelectorAll('input[name="catRadio"], input[name="typeRadio"]').forEach(r => r.checked = false);
-  document.getElementById('gelasOpts').style.display = 'none';
-  document.getElementById('botolOpts').style.display = 'none';
-  document.getElementById('customPriceOpts').style.display = 'none';
-  document.getElementById('fCustomPrice').value = '';
   document.getElementById('addPersonRow').style.display = 'none';
   document.getElementById('newPersonName').value = '';
   _selectedPeople = [];
@@ -407,43 +460,32 @@ async function openProdModal(date, existingResult = null) {
     document.getElementById('fQty').value  = existingResult.quantity;
     document.getElementById('fNote').value = existingResult.description || '';
 
-    if (existingResult.product.includes('Gelas')) {
-      document.getElementById('catGelas').checked = true;
-      document.getElementById('gelasOpts').style.display = 'flex';
-      if (existingResult.product.includes('320')) document.getElementById('t320').checked = true;
-      if (existingResult.product.includes('350')) document.getElementById('t350').checked = true;
-    } else if (existingResult.product.includes('Botol')) {
-      document.getElementById('catBotol').checked = true;
-      document.getElementById('botolOpts').style.display = 'flex';
-      if (existingResult.product.includes('720')) document.getElementById('t720').checked = true;
-      if (existingResult.product.includes('750')) document.getElementById('t750').checked = true;
-    } else if (existingResult.product.includes('Kustom')) {
-      document.getElementById('catKustom').checked = true;
-      document.getElementById('customPriceOpts').style.display = 'block';
-      const match = existingResult.product.match(/\((\d+)\)/);
-      if (match) {
-        document.getElementById('fCustomPrice').value = match[1];
-      }
-    }
+    // Extract category and price from product string e.g. "Gelas (320)"
+    const match = existingResult.product.match(/^(.*?)\s*\((\d+)\)$/);
+    renderModalProductSelectors(match ? match[1] : null, match ? match[2] : null);
+
     _selectedPeople = existingResult.peopleNames.split(', ').filter(n => _people.includes(n));
-    await refreshPeopleList(); // re-render checkboxes with selections
+    await refreshPeopleList();
+  } else {
+    renderModalProductSelectors();
   }
 
   openModal('modalProd');
 }
 
 function onCatChange() {
-  const isGelas = document.getElementById('catGelas').checked;
-  const isBotol = document.getElementById('catBotol').checked;
-  const isKustom = document.getElementById('catKustom').checked;
+  const catEl = document.querySelector('input[name="catRadio"]:checked');
+  if (!catEl) return;
 
-  document.getElementById('gelasOpts').style.display = isGelas ? 'flex' : 'none';
-  document.getElementById('botolOpts').style.display = isBotol ? 'flex' : 'none';
-  document.getElementById('customPriceOpts').style.display = isKustom ? 'block' : 'none';
-
-  // Clear sub-selections
+  // Hide all sub-selections then show the active one
+  const typeContainer = document.getElementById('modalTypeContainer');
+  if (typeContainer) {
+    typeContainer.querySelectorAll('.btn-group').forEach(el => el.style.display = 'none');
+  }
   document.querySelectorAll('input[name="typeRadio"]').forEach(r => r.checked = false);
-  document.getElementById('fCustomPrice').value = '';
+
+  const activeOpts = document.getElementById(`opts_${CSS.escape(catEl.value)}`);
+  if (activeOpts) activeOpts.style.display = 'flex';
 }
 
 async function saveProduction() {
@@ -451,26 +493,15 @@ async function saveProduction() {
   const qty    = parseInt(document.getElementById('fQty').value, 10);
   const note   = document.getElementById('fNote').value.trim();
   const catEl  = document.querySelector('input[name="catRadio"]:checked');
-  
-  let typeVal = 0;
-  let typeLabel = '';
+  const typeEl = document.querySelector('input[name="typeRadio"]:checked');
 
-  if (catEl && catEl.value === 'Kustom') {
-    typeVal = parseInt(document.getElementById('fCustomPrice').value, 10);
-    typeLabel = typeVal ? typeVal.toString() : '';
-  } else {
-    const typeEl = document.querySelector('input[name="typeRadio"]:checked');
-    if (typeEl) {
-      typeVal = parseInt(typeEl.value, 10);
-      typeLabel = typeEl.value;
-    }
-  }
+  const typeVal = typeEl ? parseInt(typeEl.value, 10) : 0;
 
   if (!qty || qty <= 0 || !catEl || !typeVal || _selectedPeople.length === 0) {
     Swal.fire({
       icon: 'warning',
       title: 'Data belum lengkap',
-      text: 'Isi jumlah, pilih produk/harga kustom yang valid, lalu pilih minimal 1 pekerja.',
+      text: 'Isi jumlah, pilih produk & tarif, lalu pilih minimal 1 pekerja.',
       timer: 2500,
       showConfirmButton: false
     });
@@ -478,7 +509,7 @@ async function saveProduction() {
   }
 
   const total   = Math.round((qty * typeVal) / _selectedPeople.length);
-  const product = `${catEl.value} (${typeLabel})`;
+  const product = `${catEl.value} (${typeEl.value})`;
 
   const data = {
     date:        formatDateLocal(date),
@@ -762,8 +793,14 @@ async function sendWA(id) {
 }
 
 // ── Tab: Anggota ────────────────────────────────────────────
+// ── Tab: Anggota & Produk ───────────────────────────────────
 async function renderPeopleTabList() {
   await refreshCaches();
+  await renderPeopleSubList();
+  await renderProductsSubList();
+}
+
+async function renderPeopleSubList() {
   const tbody      = document.getElementById('peopleTableBody');
   const emptyState = document.getElementById('peopleEmptyState');
   const table      = document.getElementById('peopleTable');
@@ -786,6 +823,49 @@ async function renderPeopleTabList() {
       <td style="font-weight:500"><i class="fas fa-user text-accent" style="margin-right:.4rem"></i>${name}</td>
       <td style="text-align:right">
         <button class="btn btn-danger btn-sm" onclick="handleDeletePersonTab('${name.replace(/'/g, "\\'")}')">
+          <i class="fas fa-trash"></i> Hapus
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+async function renderProductsSubList() {
+  const tbody      = document.getElementById('productsTableBody');
+  const emptyState = document.getElementById('productsEmptyState');
+  const table      = document.getElementById('productsTable');
+  const datalist   = document.getElementById('existingProductNames');
+
+  if (!tbody || !emptyState || !table) return;
+  tbody.innerHTML = '';
+
+  if (datalist) {
+    const uniqueNames = [...new Set(_products.map(p => p.name))];
+    datalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
+  }
+
+  if (_products.length === 0) {
+    table.style.display = 'none';
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  table.style.display = 'table';
+  emptyState.style.display = 'none';
+
+  const sortedProducts = [..._products].sort((a, b) => {
+    if (a.name !== b.name) return a.name.localeCompare(b.name);
+    return a.price - b.price;
+  });
+
+  for (const prod of sortedProducts) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500"><i class="fas fa-tag text-accent" style="margin-right:.4rem"></i>${prod.name}</td>
+      <td style="text-align:right;font-family:var(--font-mono);font-weight:600">${formatRupiah(prod.price)}</td>
+      <td style="text-align:right">
+        <button class="btn btn-danger btn-sm" onclick="handleDeleteProductTab(${prod.id}, '${prod.name.replace(/'/g, "\\'")}', ${prod.price})">
           <i class="fas fa-trash"></i> Hapus
         </button>
       </td>
@@ -824,6 +904,53 @@ async function handleDeletePersonTab(name) {
   await deletePerson(name);
   await renderPeopleTabList();
   Swal.fire({ icon: 'success', title: 'Pekerja dihapus', timer: 1200, showConfirmButton: false });
+}
+
+async function handleAddProductTab() {
+  const nameInp  = document.getElementById('productInputName');
+  const priceInp = document.getElementById('productInputPrice');
+
+  const name  = nameInp.value.trim();
+  const priceRaw = priceInp.value.replace(/\./g, '').replace(/,/g, '');
+  const price = parseInt(priceRaw, 10);
+
+  if (!name || isNaN(price) || price <= 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Data tidak valid',
+      text: 'Isi nama produk/kategori dan tarif upah yang valid.',
+      timer: 2000,
+      showConfirmButton: false
+    });
+    return;
+  }
+
+  const ok = await addProduct(name, price);
+  if (ok) {
+    nameInp.value = '';
+    priceInp.value = '';
+    await renderPeopleTabList();
+    Swal.fire({ icon: 'success', title: 'Produk ditambahkan!', timer: 1500, showConfirmButton: false });
+  } else {
+    Swal.fire({ icon: 'warning', title: 'Produk/tarif sudah ada', timer: 1800, showConfirmButton: false });
+  }
+}
+
+async function handleDeleteProductTab(id, name, price) {
+  const r = await Swal.fire({
+    title: 'Hapus Produk & Tarif?',
+    html: `Apakah Anda yakin ingin menghapus <strong>${name} (${formatRupiah(price)})</strong>?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: 'var(--danger)',
+    confirmButtonText: 'Hapus',
+    cancelButtonText: 'Batal'
+  });
+  if (!r.isConfirmed) return;
+
+  await deleteProduct(id);
+  await renderPeopleTabList();
+  Swal.fire({ icon: 'success', title: 'Produk dihapus', timer: 1200, showConfirmButton: false });
 }
 
 // ── Tab: Cek Uang ───────────────────────────────────────────
@@ -1004,7 +1131,8 @@ async function exportData() {
   const results  = await getResults();
   const people   = await getPeople();
   const holidays = await getHolidays();
-  const backup   = { results, people, holidays, exportedAt: new Date().toISOString() };
+  const products = await getProducts();
+  const backup   = { results, people, holidays, products, exportedAt: new Date().toISOString() };
 
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
@@ -1053,6 +1181,7 @@ function readAndImport(file, mode) {
         await db.results.clear();
         await db.people.clear();
         await db.holidays.clear();
+        await db.products.clear();
       }
 
       const existingPeople = await getPeople();
@@ -1068,6 +1197,14 @@ function readAndImport(file, mode) {
           const { id, ...row } = h;
           await addHoliday(row);
         }
+      }
+      if (data.products) {
+        for (const p of data.products) {
+          const { id, ...row } = p;
+          await addProduct(row.name, row.price);
+        }
+      } else {
+        await seedDefaultProducts();
       }
 
       await refreshCaches();
@@ -1218,10 +1355,11 @@ async function loadStorage() {
   box.innerHTML = `<div style="color:var(--text-3);font-size:.85rem;padding:.5rem 0"><i class="fas fa-spinner fa-spin"></i> Mengambil info penyimpanan...</div>`;
 
   try {
-    const [rCount, pCount, hCount] = await Promise.all([
+    const [rCount, pCount, hCount, prodCount] = await Promise.all([
       db.results.count(),
       db.people.count(),
       db.holidays.count(),
+      db.products.count(),
     ]);
 
     // Use Storage API for real byte-level usage
@@ -1253,7 +1391,7 @@ async function loadStorage() {
 
     box.innerHTML = `
       ${usageHtml}
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:.75rem">
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:.75rem">
         <div class="stat-card">
           <div class="stat-label">Data Produksi</div>
           <div class="stat-value">${rCount}</div>
@@ -1263,6 +1401,11 @@ async function loadStorage() {
           <div class="stat-label">Anggota Pekerja</div>
           <div class="stat-value">${pCount}</div>
           <div class="stat-sub">orang</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Katalog Produk</div>
+          <div class="stat-value">${prodCount}</div>
+          <div class="stat-sub">tarif</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Hari Libur</div>
