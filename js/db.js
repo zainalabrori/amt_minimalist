@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────
-//  AMT Production — Dexie (IndexedDB) Layer
+//  LABINI FOUNDATION — Dexie (IndexedDB) Layer
 //  Menggantikan localStorage dengan IndexedDB
 //  yang jauh lebih besar (~500 MB+ vs 5 MB)
 // ─────────────────────────────────────────────
@@ -7,7 +7,7 @@
 // Dexie dimuat dari CDN di setiap HTML via:
 // <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
 
-const db = new Dexie('AMTProduction');
+const db = new Dexie('LABINI');
 
 db.version(1).stores({
   results:  '++id, dateOriginal, product, peopleNames',

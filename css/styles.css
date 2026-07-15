@@ -1,5 +1,5 @@
 /* ============================================
-   AMT PRODUCTION — Global Stylesheet
+   LABINI FOUNDATION — Global Stylesheet
    Minimalist · Dark Mode · Eye Comfortable
    ============================================ */
 
@@ -166,28 +166,42 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   gap: .6rem;
-  font-weight: 600;
+  font-weight: 500;
   font-size: .95rem;
+  letter-spacing: .02em;
   color: var(--text);
   white-space: nowrap;
 }
 .nav-brand img { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
 
+.brand-type {
+  border-right: 2px solid var(--accent);
+  animation: brand-blink .75s step-end infinite;
+}
+@keyframes brand-blink {
+  50% { border-color: transparent }
+}
+
 .nav-links {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .25rem;
   list-style: none;
-  margin-left: auto;
+  flex: 1;
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
+}
+.nav-links li {
+  display: flex;
 }
 .nav-links::-webkit-scrollbar { display: none; }
 
 .nav-link {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: .35rem;
   padding: .35rem .7rem;
   border-radius: var(--radius-sm);
@@ -207,6 +221,8 @@ button.nav-link {
   border: none;
   font-family: inherit;
   cursor: pointer;
+  width: 100%;
+  text-align: center;
 }
 
 .nav-right {
@@ -867,6 +883,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     z-index: 199;
   }
   .nav-links.open { display: flex; }
+  .nav-brand { font-size: .82rem; gap: .45rem; letter-spacing: .03em; }
+  .nav-brand img { width: 24px; height: 24px; }
   .nav-toggle { display: flex; }
   .nav-right { gap: .35rem; }
   .result-fields { grid-template-columns: 1fr 1fr; }

@@ -1,5 +1,5 @@
 // =========================================================
-//  AMT PRODUCTION — Core Application Script (SPA)
+//  LABINI FOUNDATION — Core Application Script (SPA)
 //  Bug-fixed & Consolidated
 // =========================================================
 
@@ -22,10 +22,28 @@ let _products = [];
 let _selectedPeople = [];
 let _editId   = null;
 
+// ── Typewriter loop ──────────────────────────────────────────
+function initTypewriter() {
+  const el = document.querySelector('.brand-type');
+  if (!el) return;
+  const text = el.textContent;
+  el.textContent = '';
+  let i = 0;
+  let dir = 1;
+  (function loop() {
+    if (dir === 1 && i > text.length) { dir = -1; setTimeout(loop, 1800); return }
+    if (dir === -1 && i < 0) { dir = 1; i = 0; setTimeout(loop, 600); return }
+    el.textContent = i < 0 ? '' : text.slice(0, i);
+    i += dir;
+    setTimeout(loop, dir === 1 ? 80 : 30);
+  })();
+}
+
 // ── Initialization ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   initComfort();
+  initTypewriter();
 
   // Mobile nav toggler
   const toggle = document.getElementById('navToggle');
@@ -1260,7 +1278,7 @@ function formatWAText(results) {
   const grouped = {};
   results.forEach(r => { (grouped[r.date] = grouped[r.date] || []).push(r); });
 
-  let out = `🏭 *LAPORAN PRODUKSI AMT (${MONTHS[calMonth].toUpperCase()} ${calYear})*\n📅 ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n\n`;
+  let out = `🏭 *LAPORAN LABINI (${MONTHS[calMonth].toUpperCase()} ${calYear})*\n📅 ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n\n`;
 
   // BUG FIX: sort by dateOriginal of the first result in each group
   Object.entries(grouped)
@@ -1274,7 +1292,7 @@ function formatWAText(results) {
     });
 
   const total = results.reduce((s, r) => s + r.total, 0);
-  out += `💰 *Total Akumulasi: ${formatRupiah(total)}*\n_Laporan AMT Production_`;
+  out += `💰 *Total Akumulasi: ${formatRupiah(total)}*\n_Laporan LABINI FOUNDATION_`;
   return out;
 }
 
@@ -1302,7 +1320,7 @@ async function shareWAImage() {
 
   div.innerHTML = `
     <div style="text-align:center;border-bottom:3px solid #2563eb;padding-bottom:12px;margin-bottom:16px">
-      <h2 style="color:#2563eb;margin:0">🏭 LAPORAN PRODUKSI AMT</h2>
+      <h2 style="color:#2563eb;margin:0">🏭 LAPORAN LABINI</h2>
       <p style="margin:4px 0 0;color:#666">${MONTHS[calMonth]} ${calYear} &bull; ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
     </div>
     ${Object.entries(grouped)
@@ -1328,7 +1346,7 @@ async function shareWAImage() {
       const url = URL.createObjectURL(blob);
       const a   = document.createElement('a');
       a.href = url;
-      a.download = `AMT_Laporan_${MONTHS[calMonth]}_${calYear}.png`;
+      a.download = `LABINI_Laporan_${MONTHS[calMonth]}_${calYear}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
